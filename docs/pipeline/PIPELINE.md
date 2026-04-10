@@ -1,271 +1,160 @@
-# Universal Design & Dev Pipeline — Partus / Medical UI Projects
-
-> For: Midwife + Frontend Dev at a Norwegian medical software company  
-> Stack: Angular · Figma · Claude (Chat / Projects / Code) · Jira
+# Design & Dev Pipeline — Partus
+### For a team lead writing functional + design specs, iterating with customers, handing off to devs
 
 ---
 
-## The 6-Phase Pipeline
+## The honest reality
 
-```
-[1] DISCOVER  →  [2] DESIGN  →  [3] MAP FIELDS  →  [4] PROTOTYPE  →  [5] SPEC  →  [6] REVIEW
-  Jira/stories     Figma Make       Field list        Live prototype    Dev handoff    UX audit
-  + Claude Chat    + guidelines     + validation       Figma links       template       checklist
-```
+Your inputs are never the same. Sometimes you have a Jira ticket. Sometimes a user story from a clinician. Sometimes just a screenshot of an old Delphi form. Sometimes just your own idea. Sometimes all of the above, sometimes none.
 
-Each phase has a Claude mode and a Figma mode. Use them together, not separately.
+**The pipeline has one rule: everything for one module lives in one document.**
+
+Use the master spec template: `docs/templates/master-module-spec.md`
+Copy it once per module. It follows you from first input to dev tickets.
 
 ---
 
-## Phase 1 — Discover (Jira ticket → shared understanding)
+## What the pipeline actually looks like
 
-**Your inputs:** Jira ticket, user story from clinician/midwife, screenshot of old screen
-
-**Claude Chat — what to paste in:**
 ```
-Context: I work on Partus, an electronic pregnancy and birth journal used by
-Norwegian clinics. I am a midwife and frontend dev.
+ANY INPUT
+(Delphi module / Jira ticket / user story / your idea)
+        ↓
+[1] CAPTURE  — fill the top of the master spec
+        ↓
+[2] FIELD MAP  — before touching Figma, list every input + validation
+        ↓
+[3] DESIGN  — Figma, using the field map as your source of truth
+        ↓
+[4] PROTOTYPE → CUSTOMER  — iterate, log feedback in the master spec
+        ↓
+[5] UX REVIEW  — inline checklist in the master spec
+        ↓
+[6] TICKETS + ESTIMATES  — slice the spec into Jira tickets with story points
+        ↓
+[7] TEST CASES  — generate from the accepted spec
+```
 
-Ticket: [paste Jira ticket or user story]
-Old screen: [paste screenshot or describe it]
+You can go back to any step. The change log at the bottom of the master spec tracks what changed and when.
+
+---
+
+## Starting from different inputs
+
+### Starting from an old Delphi module
+
+This is the most common case. Paste this into Claude Chat:
+
+```
+I am refactoring an old Delphi module in Partus (Norwegian electronic birth
+journal). Here is the old module:
+
+[Paste: screenshot / describe the form, its fields, behaviors, and what it does]
 
 Help me:
-1. Rewrite this as a clear UX problem statement
-2. List all edge cases specific to clinical use
-3. Identify what data fields are involved
-4. Flag any Norwegian health regulation concerns (GDPR, Norm for informasjonssikkerhet)
-5. Suggest 2-3 UX approaches
+1. Extract every field as a table: label, type, current validation, data source
+2. Flag fields that are likely outdated or candidates for removal
+3. Flag data that might have moved to another module or system
+4. Suggest what new fields might be needed based on modern obstetric practice
+5. Note any Norwegian clinical terminology that should be updated
+
+Do NOT suggest a new design yet. Just help me understand what exists.
 ```
 
-**Figma:** Open your company library. Note which existing components apply.
-
-**Output of this phase:**
-- Problem statement (1-2 sentences)
-- List of affected data fields (seed for Phase 3)
-- Component audit (what exists vs. what needs creating)
+Then paste Claude's output into Section 2 of the master spec and start editing it.
 
 ---
 
-## Phase 2 — Design (Figma Make → refine → guideline check)
+### Starting from a Jira ticket or user story
 
-### Step 2a — Generate with Figma Make
-Prompt formula:
 ```
-[Screen name] for a medical birth journal app used by Norwegian midwives.
-Clinic: hospital maternity ward. User: midwife at a computer workstation.
-Style: [your company library name, e.g. "Partus Design System"].
-Show: [specific fields from Phase 1 output].
-Tone: clinical, calm, high information density, high contrast.
-```
+I am working on Partus (Norwegian electronic birth journal).
+Here is the input:
 
-### Step 2b — Refine with Claude Chat
-After screenshotting the Figma Make output:
-```
-Here is a Figma Make output for [screen name] in Partus.
-Our design guidelines say: [paste key rules from your Figma library]
-Issues I already see: [list them]
+[Paste: Jira ticket / user story]
 
-Review for:
-- Consistency with medical software UX conventions
-- Norwegian language/locale concerns (dates dd.mm.yyyy, decimal commas)
-- Accessibility (WCAG 2.1 AA — required for Norwegian health software)
-- Clinical workflow fit: midwife needs [specific task] done in under N clicks
-- Missing fields from this list: [paste field list]
-```
-
-### Step 2c — Edit manually in Figma
-Focus edits on:
-- Swap generated components for your actual library components
-- Fix any spacing/grid drift
-- Apply correct typography tokens
-- Add real Norwegian clinical labels (not English placeholders)
-
-### Figma plugins for this phase:
-| Plugin | Use |
-|---|---|
-| **Design Lint** | Auto-check against your library before handing off |
-| **Contrast** / **A11y Annotation Kit** | WCAG check — critical for health software |
-| **Similayer** | Select all layers of same type to batch-rename |
-| **Token Studio** | Apply your design tokens consistently |
-| **Iconify** | Find clinical icons (heart rate, calendar, etc.) |
-| **Content Reel** | Fill with realistic Norwegian names, dates, values |
-
----
-
-## Phase 3 — Map Fields (the most critical phase for medical software)
-
-> Every input, display value, dropdown, and calculation must be documented
-> before a single component is built. Clinical errors trace back to field gaps.
-
-**Use the template:** `docs/templates/field-mapping.md`
-
-**Claude Chat prompt to bootstrap the field map:**
-```
-I am designing [screen name] in Partus (birth journal, Norwegian clinics).
-From the design and Jira ticket, I identified these fields: [paste list]
-
-For each field, help me document:
-- Field type (text, number, date, dropdown, radio, checkbox, calculated)
-- If dropdown: all options with Norwegian labels + codes
-- Validation rules (required, min/max, regex, clinical range)
-- Data source (manual entry / sync from [system] / calculated from [fields])
-- Where this value writes to (which module/table/FHIR resource)
-- Edge cases (null handling, unknown, refused, not applicable)
-```
-
-**Claude Code prompt when the map is done:**
-```
-Here is the field map for [screen name]: [paste table]
-I am building this in Angular 18 with reactive forms.
-Generate:
-1. The FormGroup definition with all validators
-2. A reusable validation service for the clinical range rules
-3. TypeScript interfaces for the data model
+Help me turn this into a functional spec with:
+1. Problem statement (one sentence: who needs to do what, and why)
+2. Scope: what is included and explicitly what is NOT included
+3. Affected modules / screens
+4. Initial field list (just names and types — I will validate these next)
+5. Open questions I need to answer before designing
 ```
 
 ---
 
-## Phase 4 — Prototype (live, showable to customers)
+### Starting from your own idea
 
-### Option A — Figma native prototype (fastest)
-- Connect frames with interactions in Figma
-- Use "Overlay" for modals/dialogs
-- Use variables for dropdown state
-- Share with: Present link (view only) → paste in Jira ticket or email to clinician
-
-**Claude Chat prompt for prototype planning:**
 ```
-I need to prototype [flow name] for a Norwegian midwife.
-The flow covers: [paste steps]
-Key interactions: [list them]
-What Figma prototype connections do I need? List frame-by-frame.
-```
+I have an idea for a new feature in Partus (Norwegian electronic birth journal
+used by midwives in hospital clinics).
 
-### Option B — Anima plugin (HTML/CSS live preview)
-- For stakeholders who want to click through in a browser
-- Generates basic HTML from your Figma frame
-- Good for simple read-only reviews, not for complex form logic
+My idea: [describe it in plain language]
 
-### Option C — Angular prototype (when you need real form logic)
-Ask Claude Code:
-```
-Here is my Figma design for [screen] and my field map: [paste both]
-Generate an Angular standalone component with:
-- The complete template matching the layout
-- Reactive form with all validations from the field map
-- Mock data service returning [paste example data]
-- No backend calls, just local state
-This is a prototype only — correctness over completeness.
+Help me:
+1. Frame it as a user story: "As a [user], I need to [do X] so that [outcome]"
+2. Ask me 5 clarifying questions I should answer before speccing this out
+3. Flag any similar features that likely already exist in birth journal systems
+4. List the minimum fields this would need
 ```
 
 ---
 
-## Phase 5 — Dev Specs (handoff to devs)
+## The master spec as a living document
 
-**Use the template:** `docs/templates/dev-specs.md`
+The master spec has a **Decision Log** and a **Change Log**.
 
-### Figma Dev Mode
-Before handing off:
-1. Run Design Lint — fix all errors
-2. Check every layer has a semantic name (not "Frame 247")
-3. Add annotation layer with: field names, states (default/error/disabled), notes
-4. Mark components as "Ready for dev" in Figma status
+- Every time you make a significant decision, add a line to the Decision Log (date, what, why).
+- Every time the customer review changes something, add a line and mark the affected sections with `[updated: date]`.
+- This gives you the overview without maintaining multiple versions.
 
-### Claude Code prompt for spec generation:
+When you are lost and don't know what has changed, paste the spec intro Claude and ask:
+
 ```
-Here is my completed Figma design for [screen], my field map, and the
-component inventory:
+Here is my current master spec for [module]: [paste spec]
 
-[paste Figma frame description or component list]
-[paste field map]
-
-Generate the dev spec in this format:
-- Component breakdown (which Angular components to create/reuse)
-- Props/inputs for each component
-- API contract (what endpoints are needed, request/response shapes)
-- State management notes
-- Angular routing changes needed
-- Accessibility requirements
-```
-
-### Figma plugins for this phase:
-| Plugin | Use |
-|---|---|
-| **Zeplin** or **Figma Dev Mode** | CSS, spacing, asset export |
-| **Measure** | Auto-generate spacing annotations |
-| **Figma Tokens (Token Studio)** | Export tokens as CSS/JSON for devs |
-| **Autoflow** | Generate user flow diagrams for spec doc |
-
----
-
-## Phase 6 — UX/UI Review & QA
-
-**Use the template:** `docs/templates/ux-checklist.md`
-
-**Claude Chat prompt for heuristic review:**
-```
-Review this design [describe or paste screenshot] against Nielsen's 10 heuristics
-adapted for medical software. Additional context:
-- Norwegian clinical setting, hospital maternity ward
-- Primary user: midwife under time pressure
-- Data is patient-sensitive (GDPR, Norwegian health law)
-- Must work on: [desktop / tablet / specific device]
-Flag issues as: Critical (patient safety) / High (workflow blocker) / Medium / Low
-```
-
-**Claude Chat prompt for accessibility audit:**
-```
-Review this design for WCAG 2.1 AA compliance.
-Pay special attention to:
-- Color contrast (especially for status indicators — red/green for clinical alerts)
-- Focus order for keyboard navigation
-- Form labels and error messages in Norwegian
-- Touch target sizes (if used on tablet in clinical setting)
+I've been iterating with the customer. Help me:
+1. Summarize what has been decided vs. still open
+2. Find any inconsistencies between sections
+3. List what I still need to complete before handing off to devs
 ```
 
 ---
 
-## Claude Modes — When to Use What
+## Figma — where and when
 
-| Mode | Best for | Example |
-|---|---|---|
-| **Claude Chat** | Brainstorming, UX analysis, writing copy, reviewing designs | "Review my field map for gaps" |
-| **Claude Projects** | Maintaining context across sessions for one project | Create a Project for Partus, add your guidelines, field maps, and design decisions as files |
-| **Claude Code** | Generating Angular components, form validators, interfaces | "Generate the reactive form for this field map" |
+**Do the field map first. Always.** Opening Figma before the field map is the biggest time waster — you design something and then discover a field you forgot.
 
-### Setting up a Claude Project for Partus:
-1. Create a new Project in Claude called "Partus"
-2. Upload as project files:
-   - Your company UI design guidelines (PDF or paste key rules)
-   - Your completed field maps
-   - Your component inventory
-   - Key architectural decisions
-3. Every new conversation in this Project has full context automatically
+Once the field map is done:
+- Open your Partus library in Figma
+- Use Figma Make to generate a first draft (use the field map as your prompt)
+- Edit manually to match your library components
+- Share the Figma prototype link directly with the customer — no need to export or email
 
----
-
-## Quick Reference — Prompts by Situation
-
-| Situation | Where | Prompt start |
-|---|---|---|
-| New Jira ticket | Claude Chat | "I have a new Jira ticket for Partus. Context: [guidelines]. Ticket: ..." |
-| Old screen to refactor | Claude Chat | "Here is a screenshot of the old Partus screen for [X]. Help me identify UX problems and plan a refactor..." |
-| Generate component | Claude Code | "Generate an Angular 18 standalone component for [X] matching this Figma design and field map..." |
-| Figma Make review | Claude Chat | "Review this Figma Make output against our design guidelines..." |
-| Write user story | Claude Chat | "Write a user story for a Norwegian midwife needing to [task] in Partus..." |
-| Check field map | Claude Chat | "Review this field map for [screen]. Flag missing validations or edge cases for clinical use..." |
-| Generate dev spec | Claude Code | "Generate a dev spec for [screen] based on this field map and component list..." |
+Figma Make prompt formula for medical forms:
+```
+A form for [module name] in a Norwegian electronic birth journal (Partus).
+Used by a midwife at a hospital workstation.
+Fields: [paste your field list from the field map section]
+Style: clinical, high information density, calm, [your library name].
+Show default state and one error state.
+```
 
 ---
 
-## Files in This Docs Folder
+## Files in this docs folder
 
 ```
 docs/
 ├── pipeline/
-│   └── PIPELINE.md          ← you are here (the hub)
+│   └── PIPELINE.md              ← you are here
 └── templates/
-    ├── field-mapping.md     ← copy per screen, fill in
-    ├── dev-specs.md         ← copy per feature, fill in
-    └── ux-checklist.md      ← run before every handoff
+    ├── master-module-spec.md    ← THE document — copy once per module
+    ├── tickets-and-estimates.md ← how to turn a finished spec into Jira tickets
+    ├── field-mapping.md         ← detailed reference (already in master spec)
+    ├── dev-specs.md             ← detailed reference (already in master spec)
+    └── ux-checklist.md          ← detailed reference (already in master spec)
 ```
+
+The three detailed templates at the bottom are reference material.
+In practice, everything lives in the master module spec.
